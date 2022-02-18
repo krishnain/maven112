@@ -1,46 +1,63 @@
+@Library('sharedlibraries')_
+
 pipeline
 {
     agent any
     stages
     {
-        stage('ContinuousDownload_Master')
+        stage('ContinuousDownload')
         {
             steps
             {
-                git 'https://github.com/krishnain/maven112.git'
+                script
+                {
+                    cicd.newGit("https://github.com/krishnain/maven112.git")
+                }
             }
         }
-        stage('ContinuousBuild_Master')
+        stage('ContinuousBuild')
         {
             steps
             {
-                sh 'mvn package'
+                script
+                {
+                    cicd.newMaven()
+                }
             }
         }
-        stage('ContinuousDeployment_Master')
+        stage('ContinuousDeployment')
         {
             steps
             {
-                sh 'scp /home/ubuntu/.jenkins/workspace/DeclarativePipeline/webapp/target/webapp.war ubuntu@172.31.14.150:/var/lib/tomcat9/webapps/testapp.war'
+                script
+                {
+                    cicd.newDeploy("172.31.14.150","testapp")
+                }
             }
         }
-        stage('ContinuousTesting_Master')
+        stage('ContinuousTesting')
         {
             steps
             {
-                git 'https://github.com/intelliqittrainings/FunctionalTesting.git'
-                sh 'java -jar /home/ubuntu/.jenkins/workspace/DeclarativePipeline/testing.jar'
+                script
+                {
+                    cicd.newGit("https://github.com/intelliqittrainings/FunctionalTesting.git")
+                    cicd.runSelenium("/home/ubuntu/.jenkins/workspace/Pipelinewithlibraries")
+                }
             }
         }
-        stage('ContinuosuDelivery_Master')
+        stage('ContinuousDelivery')
         {
             steps
             {
-              input message: 'Waiting for Approval from the DM!', submitter: 'srinivas'
-              
-sh 'scp /home/ubuntu/.jenkins/workspace/DeclarativePipeline/webapp/target/webapp.war ubuntu@172.31.29.58:/var/lib/tomcat9/webapps/prodapp.war'
+                script
+                {
+                    cicd.newApprovals("srinivas")
+                    cicd.newDeploy("172.31.29.58","prodapp")
+                }
             }
         }
+        
         
         
         
